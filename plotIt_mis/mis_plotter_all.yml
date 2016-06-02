@@ -1,0 +1,25 @@
+configuration:
+    include: ['centralConfig.yml']
+
+files:
+    include: ['MCFiles.yml', 'DataFiles.yml']
+
+plots:
+    include: ['allPlots.yml']
+
+groups:
+  include: ['groups.yml']
+
+legend:
+  include: ['legendPosition.yml']
+
+systematics:
+#  - pu
+#  - elidiso
+#  - muidiso
+#  - jjbtag
+#  - jec
+#  - jer 
+#  - trigeff
+#  - scale
+#  - pdf

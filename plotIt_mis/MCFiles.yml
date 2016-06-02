@@ -1,0 +1,24 @@
+# HIGGS
+
+'ZH_histos.root':
+  type: mc
+  group: Higgs
+  order: 1
+
+# VV
+
+'ZZ_histos.root':
+  type: mc
+  group: VV
+  order: 2
+
+'DY_histos.root':
+  type: mc
+  group: DY
+  order: 3
+
+'TT_histos.root':
+  type: mc
+  group: tt
+  order: 4
+

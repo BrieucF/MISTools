@@ -11,9 +11,10 @@ plots = []
 
 objects = "nominal"
 systematic = "nominal"
-## Plots for ht and n vertex
+
 basePlotter = BasePlotter()
-plots.extend(basePlotter.generatePlots())
+weightEpression = "((runOnMC)? (btaggingReweightingMM*leptonsReweightingweight*lumiReweightingLumiWeight*mcReweightingweight*((m_dataset.cross_section==3503.71)? ((abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj==2)*1.148+(abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)==5 && jetmetnj>2)*1.348+ ( (abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)==5) || (abs(jetmetbjet1Flavor)==5 && abs(jetmetbjet2Flavor)!=5) )*1.348+( abs(jetmetbjet1Flavor)!=5 && abs(jetmetbjet2Flavor)!=5 )*1.359) : 1.)) : 1.)"
+plots.extend(basePlotter.generatePlots(categories = ["All"], stage = "no_cut", requested_plots = ["bdtoutput"], weightExpression = weightEpression, extraCut = "", systematic = "nominal", extraString = ""))
 
 for plot in plots : 
     print plot

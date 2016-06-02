@@ -1,0 +1,4 @@
+'data_obs_histos.root':
+  type: data
+  #legend: "Data"
+  group: "Data"

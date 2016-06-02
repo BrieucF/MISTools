@@ -1,0 +1,31 @@
+'tt':
+  legend: ' t#bar{t}'
+  legend-order: 6
+  fill-color: '#EB6841'
+'ttV':
+  legend: ' t#bar{t}V'
+  legend-order: 2
+  fill-color: '#53777A'
+'t':
+  legend: 'Single top'
+  legend-order: 4
+  fill-color: '#C02942'
+'DY':
+  legend: 'Drell-Yan'
+  legend-order: 5
+  fill-color: '#00A0B0'
+'Data':
+  legend: 'Data'
+'Higgs':
+  legend: 'SM Higgs'
+  legend-order: 1
+  fill-color: '#A8DBA8'
+'Other':
+  legend: 'Other'
+  legend-order: 0 
+  fill-color: '#774F38' #'#6A4A3C'
+'VV':
+  fill-color: '#ECD078'
+  legend: 'VV'
+  legend-order: 3
+    

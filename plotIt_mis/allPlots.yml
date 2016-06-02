@@ -1,0 +1,330 @@
+MVA_BDT_DY_vs_All_relativeWeight_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: &id001 [pdf, png]
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_DY_vs_All_relativeWeight_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_DY_vs_All_weight1_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_DY_vs_All_weight1_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_TT_vs_All_relativeWeight_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_TT_vs_All_relativeWeight_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_TT_vs_All_weight1_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_TT_vs_All_weight1_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_ZH_vs_All_relativeWeight_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_ZH_vs_All_weight1_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_ZZ_vs_All_relativeWeight_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_ZZ_vs_All_relativeWeight_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_ZZ_vs_All_weight1_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_BDT_ZZ_vs_All_weight1_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_multiplied_relativeWeight_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_multiplied_relativeWeight_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_multiplied_weight1_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_multiplied_weight1_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_summed_relativeWeight_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_summed_relativeWeight_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_summed_weight1_withZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'
+MVA_summed_weight1_withoutZh_kBDT_All_no_cut:
+  for-yields: false
+  labels:
+  - position: [0.22, 0.895]
+    size: 24
+    text: '#mu#mu + ee + #mue + e#mu channels'
+  legend-columns: 2
+  log-y: both
+  save-extensions: *id001
+  show-errors: true
+  show-overflow: true
+  show-ratio: true
+  x-axis: BDT output
+  y-axis: Events
+  y-axis-format: '%1% / %2$.2f'

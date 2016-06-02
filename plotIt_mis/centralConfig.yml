@@ -1,0 +1,15 @@
+width: 800
+height: 800
+luminosity-label: '%$1.2f fb^{-1} (8 TeV)'
+experiment: "CMS"
+extra-label: "Preliminary"
+
+# NTUPLE
+root: '/home/fynu/bfrancois/scratch/framework/oct2015/CMSSW_7_4_15/src/cp3_llbb/MISTools/histFactory_mis/combinedBDT_v0/'
+
+luminosity: 19700 
+luminosity-error: 0.027
+blinded-range-fill-color: "16" #"#29556270"
+blinded-range-fill-style: 3004
+
+yields-table-align: v
