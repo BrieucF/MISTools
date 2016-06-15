@@ -56,7 +56,7 @@ def get_options():
     """
     parser = argparse.ArgumentParser(description='Create shape datacards ready for combine')
 
-    parser.add_argument('-p', '--path', action='store', dest='root_path', type=str, default='/home/fynu/bfrancois/scratch/framework/oct2015/CMSSW_7_4_15/src/cp3_llbb/MISTools/histFactory_mis/combinedBDT_v0/', help='histFactory output path')
+    parser.add_argument('-p', '--path', action='store', dest='root_path', type=str, default='/home/fynu/bfrancois/scratch/framework/oct2015/CMSSW_7_4_15/src/cp3_llbb/MISTools/histFactory_mis/mis_8TeV_hist_v3/', help='histFactory output path')
 
     LUMI = 19700
     parser.add_argument('-l', '--luminosity', action='store', type=float, dest='luminosity', default=LUMI, help='integrated luminosity (default is %f /pb)' % LUMI)
@@ -86,10 +86,20 @@ def main():
     # get the options
     options = get_options()
 
-    backgrounds = ['ZZ', 'TT', 'DY']
+    backgrounds = ['VV', 'TT', 'DY']
     signals = ['ZH']
-    discriminant = 'ThreeBDTs_noZh'
-    prepareShapes(backgrounds, signals, discriminant)
+
+    discriminants = { 
+            "ThreeBDTTogether_noZh" : [(1, 'TT_vs_All_noZh'), (2, 'DY_vs_All_noZh'), (3, 'ZZ_vs_All_noZh')],
+            "ThreeBDTTogether_Zh" : [(1, 'TT_vs_All_Zh'), (2, 'DY_vs_All_Zh'), (3, 'ZZ_vs_All_Zh'), (4, 'ZH_vs_All_Zh')],
+            "BDTsummed_noZh" : [(1, 'BDTsummed_noZh')],
+            "Zh_vs_All" : [(1, 'ZH_vs_All_Zh')],
+            'BDTsummed_Zh' : [(1, 'BDTsummed_Zh')],
+            'BDTmultiplied_noZh' : [(1, 'BDTmultiplied_noZh')],
+            'BDTmultiplied_Zh' : [(1, 'BDTmultiplied_Zh')]
+            }
+    for discriminant in discriminants.keys() :
+        prepareShapes(backgrounds, signals, discriminants[discriminant], discriminant)
 
 def prepareFile(processes_map, categories_map, root_path, discriminant):
     """
@@ -238,25 +248,14 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
 
     return output_filename, cms_systematics
 
-def prepareShapes(backgrounds, signals, discriminant):
+def prepareShapes(backgrounds, signals, discriminant, discriminantName):
     # Backgrounds is a list of string of the considered backgrounds corresponding to entries in processes_histfactory_mapping
 
     import CombineHarvester.CombineTools.ch as ch
 
     root_path = options.root_path
 
-    categories_dict = {"ThreeBDTs_noZh" :
-            [
-            (1, 'TT_vs_All_noZh'),
-            (2, 'DY_vs_All_noZh'),
-            (3, 'ZZ_vs_All_noZh'),
-            #(3, 'ptll'),
-            #(4, 'ptjj'),
-            ],
-            "BDTsummed_noZh" : [(1, 'BDTsummed_noZh')],
-            "BDTsummed_Zh" : [(1, 'BDTsummed_Zh')],
-            }
-    categories = categories_dict[discriminant]
+    categories = discriminant
 
     categories_histfactory_mapping = {
             'BDTsummed_noZh': 'MVA_summed_weight1_withoutZh_kBDT_All_no_cut',
@@ -269,6 +268,7 @@ def prepareShapes(backgrounds, signals, discriminant):
             'TT_vs_All_Zh': 'MVA_BDT_TT_vs_All_weight1_withZh_kBDT_All_no_cut',
             'DY_vs_All_Zh': 'MVA_BDT_DY_vs_All_weight1_withZh_kBDT_All_no_cut',
             'ZZ_vs_All_Zh': 'MVA_BDT_ZZ_vs_All_weight1_withZh_kBDT_All_no_cut',
+            'ZH_vs_All_Zh': 'MVA_BDT_ZH_vs_All_weight1_withZh_kBDT_All_no_cut',
             }
 
     processes_histfactory_mapping = {
@@ -284,7 +284,7 @@ def prepareShapes(backgrounds, signals, discriminant):
     if not options.fake_data:
         processes_histfactory_mapping['data_obs'] = ['data_obs_histos.root']
 
-    file, systematics = prepareFile(processes_histfactory_mapping, categories_histfactory_mapping, root_path, discriminant)
+    file, systematics = prepareFile(processes_histfactory_mapping, categories_histfactory_mapping, root_path, discriminantName)
  
     cb = ch.CombineHarvester()
 
@@ -324,13 +324,13 @@ def prepareShapes(backgrounds, signals, discriminant):
 
     for signal in signals :
 
-        output_prefix = 'MIS_Signal_%s_Discriminant_%s' % (signal, discriminant)
+        output_prefix = 'MIS_Signal_%s_Discriminant_%s' % (signal, discriminantName)
 
         output_dir = os.path.join(options.output, '%s' % (signal))
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        fake_mass = signal
+        fake_mass = '125'
 
         # Write card
         datacard = os.path.join(output_dir, output_prefix + '.dat')
