@@ -34,12 +34,15 @@ def get_options():
     #    default=['SM'], help='MVA training clusters. Use `all` as an alias for all MVA clusters, or `analysis` to use analysis conditions')
 
     parser.add_argument('-o', '--output', action='store', dest='output', type=str, default='Cards_yields', help='Output directory')
-    parser.add_argument('-m', '--mode', action='store', dest='mode', type=str, default='variable', help='box or variable?')
-    parser.add_argument('-n', '--name', action='store', dest='name', type=str, default='dummy', help='Name of the box splitting, only relevant for box mode')
-    parser.add_argument('-f', '--file', action='store', dest='file', type=str, default='', help='Name of the input rootfile, relevant only for box mode')
+    #parser.add_argument('-n', '--name', action='store', dest='name', type=str, default='dummy', help='Name of the box splitting, only relevant for box mode')
+    #parser.add_argument('-f', '--file', action='store', dest='file', type=str, default='', help='Name of the input rootfile, relevant only for box mode')
+    parser.add_argument('-b', '--box', action='store_true', dest='box', help='Extract limits based on box yields')
+    parser.add_argument('--reweight', action='store_true', dest='reweight', help='Apply a preliminary reweighting')
 
     parser.add_argument('--fake-data', action='store_true', dest='fake_data',
         help='Use fake data instead of real data')
+    parser.add_argument('--SF', action='store_true', dest='SF',
+        help='Produce cards for scale factors extraction (add line with rateParam)')
 
     parser.add_argument('-s', '--stat', action='store_true', dest='stat_only',
         help='Do not consider systematic uncertainties')
@@ -54,33 +57,44 @@ def main():
     # get the options
     options = get_options()
 
-    backgrounds = ['ZZ', 'TT', 'DYbb', 'DYbx', 'DYxx', 'ZH', 'tWp', 'tWm', 'TTV', 'ST']
+    backgrounds = ['ZZ', 'TT', 'DYbb', 'DYbx', 'DYxx', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
+    #backgrounds = ['ZZ', 'TT', 'DY', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
     signals = [
                 'TTDM_1_10',
-                #'TTDM_1_100',
-                #'TTDM_1_500',
-                #'TTDM_1_10_ps',
-                #'TTDM_1_100_ps',
-                #'TTDM_1_500_ps',
-                #'H_200_ZA_50',
-                #'H_3000_ZA_2000',
-                #'H_500_ZA_300',
-                #'H_800_ZA_700',
-                #'Stop_500_325',
-                #'Stop_850_100',
-                #'X_400_hh',
-                #'X_650_hh',
-                #'X_900_hh',
-                #'SMhh',
+                'TTDM_1_100',
+                'TTDM_1_500',
+                'TTDM_1_10_ps',
+                'TTDM_1_100_ps',
+                'TTDM_1_500_ps',
+                'H_200_ZA_50',
+                'H_3000_ZA_2000',
+                'H_500_ZA_300',
+                'H_800_ZA_700',
+                'Stop_500_325',
+                'Stop_850_100',
+                'X_400_hh',
+                'X_650_hh',
+                'X_900_hh',
+                'SMhh',
                 ]
 
-    if options.mode == 'box' :
-        prepareShapesFromBoxes(backgrounds, signals, options.name)
+    if options.box :
+        print "Box mode!"
+        discriminants = { 
+                 'yields': [(1, 'yields')],
+                 #'ordered_yields': [(1, 'ordered_yields')]
+                 }
+        for discriminant in discriminants.keys() :
+            prepareShapes(backgrounds, signals, discriminants[discriminant], discriminant)
+        #prepareShapesFromBoxes(backgrounds, signals, options.name)
 
-    elif options.mode == 'variable' :
+    else :
+        print "Variable mode!"
         discriminants = { 
                  #"ATan_DY_TT" : [(1, 'ATan_DY_TT')],
-                 "ATan_DY_TT_plus_CSVProd" : [(1, 'ATan_DY_TT'), (2, 'csvProd')],
+                 #"mll" : [(1, 'mll')],
+                 #"ATan_DY_TT_plus_CSVProd" : [(1, 'ATan_DY_TT'), (2, 'csvProd')],
+                 "CSVProd" : [(1, 'csvProd')],
                  #"ATan_twp_twm" : [(1, 'ATan_twp_twm')],
                  #"tt_dy_weights": [(1, 'TT_weights'), (2, 'DY_weights')],
                  #"dy_weights": [(2, 'DY_weights')],
@@ -96,8 +110,6 @@ def main():
                 }
         for discriminant in discriminants.keys() :
             prepareShapes(backgrounds, signals, discriminants[discriminant], discriminant)
-    else : 
-        print "Mode must be box or variable"
 
 def merge_histograms(process, histogram, destination):
     """
@@ -213,15 +225,15 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
 
     hash = hash.hexdigest()
 
-    if os.path.exists(output_filename):
-        # File exists. Check is stored hash is the same as the computed one. If yes, skip the file create
-        f = ROOT.TFile.Open(output_filename)
-        stored_hash = f.Get('hash')
-        if stored_hash and stored_hash.GetTitle() == hash:
-            print("File %r already exists and contains all the needed shapes. Skipping file generation." % output_filename)
-            return output_filename, cms_systematics
-        else:
-            print("File %r already exists but is no longer up-to-date. It'll be regenerated." % output_filename)
+    #if os.path.exists(output_filename):
+    #    # File exists. Check is stored hash is the same as the computed one. If yes, skip the file create
+    #    f = ROOT.TFile.Open(output_filename)
+    #    stored_hash = f.Get('hash')
+    #    if stored_hash and stored_hash.GetTitle() == hash:
+    #        print("File %r already exists and contains all the needed shapes. Skipping file generation." % output_filename)
+    #        return output_filename, cms_systematics
+    #    else:
+    #        print("File %r already exists but is no longer up-to-date. It'll be regenerated." % output_filename)
 
     def dict_get(dict, name):
         if name in dict:
@@ -231,6 +243,8 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
 
     # Create final shapes
     shapes = {}
+    if options.reweight :
+        print "Will reweight some histograms before to feed combine"
     for category, original_histogram_name in histograms.items():
         shapes[category] = {}
         for process, process_files in processes_files.items():
@@ -238,7 +252,17 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
 
             for process_file in process_files:
                 f = ROOT.TFile.Open(process_file)
-                shapes[category][process]['nominal'] = merge_histograms(process, f.Get(original_histogram_name), dict_get(shapes[category][process], 'nominal'))
+                TH1 = f.Get(original_histogram_name)
+                if options.reweight :
+                    if "DY" in process_file :
+                        if not ('DYJetsToLL_M-10to50') in process_file:
+                            print "Reweight ", process_file, " by 0.75950" 
+                            TH1.Scale(0.75950)
+                    if "TTT" in process_file :
+                        print "Reweight ", process_file, " by 0.94829" 
+                        TH1.Scale(0.94829)
+                #shapes[category][process]['nominal'] = merge_histograms(process, f.Get(original_histogram_name), dict_get(shapes[category][process], 'nominal'))
+                shapes[category][process]['nominal'] = merge_histograms(process, TH1, dict_get(shapes[category][process], 'nominal'))
 
                 for systematic in systematics:
                     for variation in ['up', 'down']:
@@ -295,11 +319,11 @@ def prepareShapesFromBoxes(backgrounds, signals, discriminantName):
 
     cb = ch.CombineHarvester()
 
-    cb.AddObservations(['*'], [''], ['8TeV'], [''], categories)
+    cb.AddObservations(['*'], [''], ['13TeV'], [''], categories)
 
-    cb.AddProcesses(['*'], [''], ['8TeV_2015'], [''], backgrounds, categories, False)
+    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], backgrounds, categories, False)
 
-    cb.AddProcesses(['*'], [''], ['8TeV_2015'], [''], signals, categories, True)
+    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], signals, categories, True)
 
     # Systematics
     if not options.stat_only:
@@ -384,59 +408,65 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
             'ZZ_weights': 'pp_zz_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
             'ATan_DY_TT': 'arcTan_pp_Z_llbb_simple_tfJetAllEta_minus_pp_tt_llbb_tfJetAllEta_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
             'ATan_twp_twm': 'arcTan_twplus_tfJetAllEta_minus_twminus_tfJetAllEta_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'csvProd': 'jj_CSVprod_All_hh_llmetjj_HWWleptons_btagM_csv_nonzero_ttweight'
+            'csvProd': 'jj_CSVprod_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            'yields': '^yields$',
+            'mll': 'll_M_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
             }
-    if not options.mode == 'box' :
-        processes_histfactory_mapping = {
-                # Background
-                'TT': ['TTTo2L2Nu_13TeV-powheg_Fall15MiniAODv2'],
-                #'DY': ['DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4', 'DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext3'],
-                'DY': ['DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
-                'DYxx': ['DYxxToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
-                'DYbx': ['DYbxToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
-                'DYbb': ['DYbbToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
-                #'ttV': ['TT(W|Z)To'],
-                'ZH': ['ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8'],
-                'ZZ': ['ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8_Fall15MiniAODv2'],
-                'tWp': ['ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg_Fall15MiniAODv2'],
-                'tWm': ['ST_tW_top_5f_inclusiveDecays_13TeV-powheg_Fall15MiniAODv2'],
-                'TTV': ['TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8_Fall15MiniAODv2', 'TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8_Fall15MiniAODv2'],
-                'ST': ['ST_s-channel_4f_leptonDecays_13TeV-amcatnlo_Fall15MiniAODv2', 'ST_t-channel_4f_leptonDecays_13TeV-amcatnlo_Fall15MiniAODv2'],
-                # Signals
-                'TTDM_1_10': ['TTbarDMJets_scalar_Mchi-1_Mphi-10_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'TTDM_1_100': ['TTbarDMJets_scalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'TTDM_1_500': ['TTbarDMJets_scalar_Mchi-1_Mphi-500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'TTDM_1_10_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-10_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'TTDM_1_100_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'TTDM_1_500_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                
-                'H_200_ZA_50': ['HToZATo2L2B_MH-200_MA-50_13TeV-madgraph_Fall15MiniAODv2'],
-                'H_3000_ZA_2000': ['HToZATo2L2B_MH-3000_MA-2000_13TeV-madgraph_Fall15MiniAODv2'],
-                'H_500_ZA_300': ['HToZATo2L2B_MH-500_MA-300_13TeV-madgraph_Fall15MiniAODv2'],
-                'H_800_ZA_700': ['HToZATo2L2B_MH-800_MA-700_13TeV-madgraph_Fall15MiniAODv2'],
-                
-                'Stop_500_325': ['SMS-T2tt_mStop-500_mLSP-325_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'Stop_850_100': ['SMS-T2tt_mStop-850_mLSP-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
-                'X_400_hh': ['GluGluToRadionToHHTo2B2VTo2L2Nu_M-400_narrow_Fall15MiniAODv2'],
-                'X_650_hh': ['GluGluToRadionToHHTo2B2VTo2L2Nu_M-650_narrow_Fall15MiniAODv2'],
-                'X_900_hh': ['GluGluToRadionToHHTo2B2VTo2L2Nu_M-900_narrow_Fall15MiniAODv2'],
-                'SMhh': ['GluGluToHHTo2B2VTo2L2Nu_node_SM_13TeV-madgraph'],
-                #'SMHiggs': ['.*_M125_.*'],
-                }
-        if not options.fake_data:
-            processes_histfactory_mapping['data_obs'] = ['.Run2015D-16Dec2015.']
-    else : 
-        processes_histfactory_mapping = {
-                # Background
-                'TT': ['TT_histos.root'],
-                'DY': ['DY_histos.root'],
-                #'ttV': ['TT(W|Z)To'],
-                'ZH': ['ZH_histos.root'],
-                'VV': ['ZZ_histos.root'],
-                #'SMHiggs': ['.*_M125_.*'],
-                }
-        if not options.fake_data:
-            processes_histfactory_mapping['data_obs'] = ['data_obs_histos.root']
+    #if not options.mode == 'box' :
+    processes_histfactory_mapping = {
+            # Background
+            'TT': ['TTTo2L2Nu_13TeV-powheg_Fall15MiniAODv2'],
+            #'DY': ['DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4', 'DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext3'],
+            'DY': ['DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
+            'DYxx': ['DYxxToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
+            'DYbx': ['DYbxToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
+            'DYbb': ['DYbbToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext4'],
+            'DY_10_50': ['DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_extended_ext0_plus_ext1_plus_ext3'],
+            #'ttV': ['TT(W|Z)To'],
+            'ZH': ['ZH_HToBB_ZToLL_M125_13TeV_powheg_pythia8'],
+            'ZZ': ['ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8_Fall15MiniAODv2'],
+            'tWp': ['ST_tW_antitop_5f_inclusiveDecays_13TeV-powheg_Fall15MiniAODv2'],
+            'tWm': ['ST_tW_top_5f_inclusiveDecays_13TeV-powheg_Fall15MiniAODv2'],
+            'TTV': ['TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8_Fall15MiniAODv2', 'TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8_Fall15MiniAODv2', 'TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_Fall15MiniAODv2', 'TTWJetsToQQ_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_Fall15MiniAODv2'],
+            'ST': ['ST_s-channel_4f_leptonDecays_13TeV-amcatnlo_Fall15MiniAODv2', 'ST_t-channel_4f_leptonDecays_13TeV-amcatnlo_Fall15MiniAODv2'],
+            'WW' : ['WWTo2L2Nu_13TeV-powheg_Fall15MiniAODv2'],
+            'ttH' : ['ttHTobb_M125_13TeV_powheg_pythia8'],
+            # Signals
+            'TTDM_1_10': ['TTbarDMJets_scalar_Mchi-1_Mphi-10_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'TTDM_1_100': ['TTbarDMJets_scalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'TTDM_1_500': ['TTbarDMJets_scalar_Mchi-1_Mphi-500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'TTDM_1_10_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-10_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'TTDM_1_100_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'TTDM_1_500_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            
+            'H_200_ZA_50': ['HToZATo2L2B_MH-200_MA-50_13TeV-madgraph_Fall15MiniAODv2'],
+            'H_3000_ZA_2000': ['HToZATo2L2B_MH-3000_MA-2000_13TeV-madgraph_Fall15MiniAODv2'],
+            'H_500_ZA_300': ['HToZATo2L2B_MH-500_MA-300_13TeV-madgraph_Fall15MiniAODv2'],
+            'H_800_ZA_700': ['HToZATo2L2B_MH-800_MA-700_13TeV-madgraph_Fall15MiniAODv2'],
+            
+            'Stop_500_325': ['SMS-T2tt_mStop-500_mLSP-325_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'Stop_850_100': ['SMS-T2tt_mStop-850_mLSP-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
+            'X_400_hh': ['GluGluToRadionToHHTo2B2VTo2L2Nu_M-400_narrow_Fall15MiniAODv2'],
+            'X_650_hh': ['GluGluToRadionToHHTo2B2VTo2L2Nu_M-650_narrow_Fall15MiniAODv2'],
+            'X_900_hh': ['GluGluToRadionToHHTo2B2VTo2L2Nu_M-900_narrow_Fall15MiniAODv2'],
+            'SMhh': ['GluGluToHHTo2B2VTo2L2Nu_node_SM_13TeV-madgraph'],
+            #'SMHiggs': ['.*_M125_.*'],
+            }
+    if not options.fake_data:
+        processes_histfactory_mapping['data_obs'] = ['.Run2015D-16Dec2015.']
+        print "Carefull we use  regex .Run2015D-16Dec2015."
+    #else : 
+    #    processes_histfactory_mapping = {
+    #            # Background
+    #            'TT': ['TT_histos.root'],
+    #            'DY': ['DY_histos.root'],
+    #            #'ttV': ['TT(W|Z)To'],
+    #            'ZH': ['ZH_histos.root'],
+    #            'VV': ['ZZ_histos.root'],
+    #            #'SMHiggs': ['.*_M125_.*'],
+    #            }
+    #    if not options.fake_data:
+    #        processes_histfactory_mapping['data_obs'] = ['data_obs_histos.root']
 
     file, systematics = prepareFile(processes_histfactory_mapping, categories_histfactory_mapping, root_path, discriminantName)
  
@@ -450,17 +480,43 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
 
     # Systematics
     if not options.stat_only:
-        #cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['8TeV_2015'], 1.027))
+        cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.027))
 
-        cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
-                (['TT'], 1.50)
-                (['DY'], 1.50)
-         #        (['SingleTop'], 1.20)
-                )
+        #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
+        #        (['TT'], 1.50)
+        #        (['DY'], 1.50)
+        # #        (['SingleTop'], 1.20)
+        #        )
 
         #cb.cp().AddSyst(cb, '$PROCESS_xsec', 'lnN', ch.SystMap('process')
         #        (['ttbar'], 1.055842)
         #        )
+
+    if options.SF :
+        if not options.box : 
+            cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
+                    #(['TT'], 1.)
+                    #(['DY'], 1.)
+                    (['DYbb'], 1.)
+                    (['DYbx'], 1.)
+                    (['DYxx'], 1.)
+                    #(['ZZ'], 1.)
+                    #(['ZH'], 1.)
+                    #(['tWp'], 1.)
+                    #(['tWm'], 1.)
+                    )
+        else:
+            cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
+                    (['TT'], 1.)
+                    (['DY'], 1.)
+                    #(['DYbb'], 1.)
+                    #(['DYbx'], 1.)
+                    #(['DYxx'], 1.)
+                    (['ZZ'], 1.)
+                    (['ZH'], 1.)
+                    (['tWp'], 1.)
+                    (['tWm'], 1.)
+                    )
 
     for systematic in systematics:
         cb.cp().AddSyst(cb, systematic, 'shape', ch.SystMap()(1.00))
