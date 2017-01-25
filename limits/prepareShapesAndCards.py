@@ -57,24 +57,27 @@ def main():
     # get the options
     options = get_options()
 
-    backgrounds = ['ZZ', 'TT', 'DYbb', 'DYbx', 'DYxx', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
-    #backgrounds = ['ZZ', 'TT', 'DY', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
+    if options.box and options.SF :
+        backgrounds = ['ZZ', 'TT', 'DY', 'ZH', 'tWp', 'tWm']
+    else :
+        #backgrounds = ['ZZ', 'TT', 'DYbb', 'DYbx', 'DYxx', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
+        backgrounds = ['ZZ', 'TT', 'DY', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
     signals = [
-                'TTDM_1_10',
-                'TTDM_1_100',
-                'TTDM_1_500',
-                'TTDM_1_10_ps',
-                'TTDM_1_100_ps',
-                'TTDM_1_500_ps',
-                'H_200_ZA_50',
-                'H_3000_ZA_2000',
-                'H_500_ZA_300',
-                'H_800_ZA_700',
-                'Stop_500_325',
-                'Stop_850_100',
-                'X_400_hh',
-                'X_650_hh',
-                'X_900_hh',
+                #'TTDM_1_10',
+                #'TTDM_1_100',
+                #'TTDM_1_500',
+                #'TTDM_1_10_ps',
+                #'TTDM_1_100_ps',
+                #'TTDM_1_500_ps',
+                #'H_200_ZA_50',
+                #'H_3000_ZA_2000',
+                #'H_500_ZA_300',
+                #'H_800_ZA_700',
+                #'Stop_500_325',
+                #'Stop_850_100',
+                #'X_400_hh',
+                #'X_650_hh',
+                #'X_900_hh',
                 'SMhh',
                 ]
 
@@ -93,8 +96,11 @@ def main():
         discriminants = { 
                  #"ATan_DY_TT" : [(1, 'ATan_DY_TT')],
                  #"mll" : [(1, 'mll')],
+                 #"mll_ee" : [(1, 'mll_ee')],
+                 "mll_emu" : [(1, 'mll_emu')],
+                 #"mll_mumu" : [(1, 'mll_mumu')],
                  #"ATan_DY_TT_plus_CSVProd" : [(1, 'ATan_DY_TT'), (2, 'csvProd')],
-                 "CSVProd" : [(1, 'csvProd')],
+                 #"CSVProd" : [(1, 'csvProd')],
                  #"ATan_twp_twm" : [(1, 'ATan_twp_twm')],
                  #"tt_dy_weights": [(1, 'TT_weights'), (2, 'DY_weights')],
                  #"dy_weights": [(2, 'DY_weights')],
@@ -129,8 +135,8 @@ def merge_histograms(process, histogram, destination):
     if not histogram:
         raise Exception('Missing histogram for %r. This should not happen.' % process)
 
-    if histogram.GetEntries() == 0:
-        return
+    #if histogram.GetEntries() == 0:
+    #    return
 
     # Rescale histogram to luminosity, if it's not data
     if process != 'data_obs':
@@ -296,6 +302,7 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
         output_file.mkdir(category).cd()
         for process, systematics_ in processes.items():
             for systematic, histogram in systematics_.items():
+                print process
                 histogram.SetName(process if systematic == 'nominal' else process + '__' + systematic)
                 histogram.Write()
         output_file.cd()
@@ -327,7 +334,7 @@ def prepareShapesFromBoxes(backgrounds, signals, discriminantName):
 
     # Systematics
     if not options.stat_only:
-        cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['8TeV_2015'], 1.027))
+        cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.027))
 
         #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
         #        (['ttbar'], 1.10)
@@ -411,6 +418,9 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
             'csvProd': 'jj_CSVprod_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
             'yields': '^yields$',
             'mll': 'll_M_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            'mll_ee': 'll_M_ElEl_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            'mll_emu': 'll_M_MuEl_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            'mll_mumu': 'll_M_MuMu_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
             }
     #if not options.mode == 'box' :
     processes_histfactory_mapping = {
@@ -495,17 +505,25 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
     if options.SF :
         if not options.box : 
             cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
-                    #(['TT'], 1.)
-                    #(['DY'], 1.)
-                    (['DYbb'], 1.)
-                    (['DYbx'], 1.)
-                    (['DYxx'], 1.)
+                    (['TT'], 1.)
+                    (['DY'], 1.)
+                    #(['DYbb'], 1.)
+                    #(['DYbx'], 1.)
+                    #(['DYxx'], 1.)
                     #(['ZZ'], 1.)
                     #(['ZH'], 1.)
                     #(['tWp'], 1.)
                     #(['tWm'], 1.)
                     )
         else:
+            #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
+            #        (['TT'], 1.5)
+            #        (['DY'], 1.5)
+            #        (['ZZ'], 1.5)
+            #        (['ZH'], 1.5)
+            #        (['tWp'], 1.5)
+            #        (['tWm'], 1.5)
+            #        )
             cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
                     (['TT'], 1.)
                     (['DY'], 1.)
