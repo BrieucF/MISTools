@@ -15,13 +15,19 @@ ROOT.gROOT.SetBatch()
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 sys.argv = tmpargv
 
+def zeroNegativeBins(h):
+    for i in range(1, h.GetNbinsX() + 1):
+        if h.GetBinContent(i) < 0.:
+            h.SetBinContent(i, 0.)
+
 def get_options():
     """
     Parse and return arguments provided by the user
     """
     parser = argparse.ArgumentParser(description='Create shape datacards ready for combine')
 
-    parser.add_argument('-p', '--path', action='store', dest='root_path', type=str, default='/home/fynu/bfrancois/scratch/framework/MIS_prod_data/CMSSW_7_6_5/src/cp3_llbb/HHTools/histFactory_hh/weightPlot_v4/condor/output/', help='histFactory output path')
+    #parser.add_argument('-p', '--path', action='store', dest='root_path', type=str, default='/home/fynu/bfrancois/scratch/framework/MIS_prod_data/CMSSW_7_6_5/src/cp3_llbb/HHTools/histFactory_hh/weightPlot_v4/condor/output/', help='histFactory output path')
+    parser.add_argument('-p', '--path', action='store', dest='root_path', type=str, default='/home/fynu/bfrancois/scratch/framework/MIS_prod_data/CMSSW_7_6_5/src/cp3_llbb/ttbar_effth_delphes/analyzer/results/one_vs_all_puregini_10pc_effratio_2_nonInfPunderatedWeight_DYdfWeight/suitable_th1_ordered', help='histFactory output path')
 
     LUMI = 2300
     parser.add_argument('-l', '--luminosity', action='store', type=float, dest='luminosity', default=LUMI, help='integrated luminosity (default is %f /pb)' % LUMI)
@@ -44,8 +50,14 @@ def get_options():
     parser.add_argument('--SF', action='store_true', dest='SF',
         help='Produce cards for scale factors extraction (add line with rateParam)')
 
-    parser.add_argument('-s', '--stat', action='store_true', dest='stat_only',
-        help='Do not consider systematic uncertainties')
+    parser.add_argument('--nosys', action='store', dest='nosys', default=False,
+            help='Consider or not systematic uncertainties (NB : bbb uncertainty is with another flag)')
+    parser.add_argument('--bbb', action='store', dest='bbb', default=False,
+        help='Consider or not bin by bin MC stat systematic uncertainties')
+    parser.add_argument('--mt', action='store', dest='mt', type=float, default=0.5,
+        help='Consider or not bin by bin MC stat systematic uncertainties')
+    parser.add_argument('--flavSplit', action='store', dest='flavSplit', type=bool, default=False, 
+            help='Split flavor or not')
 
     options = parser.parse_args()
     return options
@@ -59,34 +71,60 @@ def main():
 
     if options.box and options.SF :
         backgrounds = ['ZZ', 'TT', 'DY', 'ZH', 'tWp', 'tWm']
+        #backgrounds = ['ZZ', 'TT', 'DY', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
+        signals = [
+                    #'TTDM_1_10',
+                    #'TTDM_1_100',
+                    #'TTDM_1_500',
+                    #'TTDM_1_10_ps',
+                    #'TTDM_1_100_ps',
+                    #'TTDM_1_500_ps',
+                    #'H_200_ZA_50',
+                    #'H_3000_ZA_2000',
+                    #'H_500_ZA_300',
+                    #'H_800_ZA_700',
+                    #'Stop_500_325',
+                    #'Stop_850_100',
+                    #'X_400_hh',
+                    #'X_650_hh',
+                    #'X_900_hh',
+                    'SMhh',
+                    ]
     else :
         #backgrounds = ['ZZ', 'TT', 'DYbb', 'DYbx', 'DYxx', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
         backgrounds = ['ZZ', 'TT', 'DY', 'DY_10_50', 'ZH', 'tWp', 'tWm', 'TTV', 'ST', 'WW', 'ttH']
-    signals = [
-                #'TTDM_1_10',
-                #'TTDM_1_100',
-                #'TTDM_1_500',
-                #'TTDM_1_10_ps',
-                #'TTDM_1_100_ps',
-                #'TTDM_1_500_ps',
-                #'H_200_ZA_50',
-                #'H_3000_ZA_2000',
-                #'H_500_ZA_300',
-                #'H_800_ZA_700',
-                #'Stop_500_325',
-                #'Stop_850_100',
-                #'X_400_hh',
-                #'X_650_hh',
-                #'X_900_hh',
-                'SMhh',
-                ]
+        #backgrounds = ['ZZ', 'TT', 'DY', 'ZH', 'tWp', 'tWm']
+        signals = [
+                    'TTDM_1_10',
+                    'TTDM_1_100',
+                    'TTDM_1_500',
+                    'TTDM_1_10_ps',
+                    'TTDM_1_100_ps',
+                    'TTDM_1_500_ps',
+                    #'H_200_ZA_50',
+                    #'H_3000_ZA_2000',
+                    'H_500_ZA_300',
+                    'H_800_ZA_700',
+                    'Stop_500_325',
+                    'Stop_850_100',
+                    'X_400_hh',
+                    'X_650_hh',
+                    'X_900_hh',
+                    'SMhh',
+                    ]
 
     if options.box :
         print "Box mode!"
-        discriminants = { 
-                 'yields': [(1, 'yields')],
-                 #'ordered_yields': [(1, 'ordered_yields')]
-                 }
+        if options.flavSplit :
+            discriminants = { 
+                     #'yields': [(1, 'yields')],
+                     'yields_flavSplit': [(1, 'yields_sf'), (2, 'yields_df')],
+                     #'ordered_yields': [(1, 'ordered_yields')]
+                     }
+        else :
+            discriminants = {
+                'yields': [(1, 'yields')],
+                }
         for discriminant in discriminants.keys() :
             prepareShapes(backgrounds, signals, discriminants[discriminant], discriminant)
         #prepareShapesFromBoxes(backgrounds, signals, options.name)
@@ -97,8 +135,8 @@ def main():
                  #"ATan_DY_TT" : [(1, 'ATan_DY_TT')],
                  #"mll" : [(1, 'mll')],
                  #"mll_ee" : [(1, 'mll_ee')],
-                 "mll_emu" : [(1, 'mll_emu')],
                  #"mll_mumu" : [(1, 'mll_mumu')],
+                 "mll_emu" : [(1, 'mll_emu')],
                  #"ATan_DY_TT_plus_CSVProd" : [(1, 'ATan_DY_TT'), (2, 'csvProd')],
                  #"CSVProd" : [(1, 'csvProd')],
                  #"ATan_twp_twm" : [(1, 'ATan_twp_twm')],
@@ -149,6 +187,8 @@ def merge_histograms(process, histogram, destination):
     else:
         d = destination
         d.Add(histogram)
+    print "Remove negative bins"
+    zeroNegativeBins(d)
 
     return d
 
@@ -269,12 +309,11 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
                         TH1.Scale(0.94829)
                 #shapes[category][process]['nominal'] = merge_histograms(process, f.Get(original_histogram_name), dict_get(shapes[category][process], 'nominal'))
                 shapes[category][process]['nominal'] = merge_histograms(process, TH1, dict_get(shapes[category][process], 'nominal'))
-
-                for systematic in systematics:
-                    for variation in ['up', 'down']:
-                        key = CMSNamingConvention(systematic) + variation.capitalize()
-                        shapes[category][process][key] = merge_histograms(process, f.Get(original_histogram_name + '__' + systematic + variation), dict_get(shapes[category][process][key]))
-
+                if not process == "data_obs" : 
+                    for systematic in systematics:
+                        for variation in ['up', 'down']:
+                            key = CMSNamingConvention(systematic) + variation.capitalize()
+                            shapes[category][process][key] = merge_histograms(process, f.Get(original_histogram_name + '__' + systematic + variation), dict_get(shapes[category][process], key))
                 f.Close()
 
     output_file = ROOT.TFile.Open(output_filename, 'recreate')
@@ -302,7 +341,6 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
         output_file.mkdir(category).cd()
         for process, systematics_ in processes.items():
             for systematic, histogram in systematics_.items():
-                print process
                 histogram.SetName(process if systematic == 'nominal' else process + '__' + systematic)
                 histogram.Write()
         output_file.cd()
@@ -312,88 +350,88 @@ def prepareFile(processes_map, categories_map, root_path, discriminant):
 
     return output_filename, cms_systematics
 
-def prepareShapesFromBoxes(backgrounds, signals, discriminantName):
-    # Backgrounds is a list of string of the considered backgrounds corresponding to entries in processes_histfactory_mapping
-
-    import CombineHarvester.CombineTools.ch as ch
-
-    if options.file == '' : 
-        print "Must specify input file for box mode"
-        sys.exit()
-    file = options.file 
-
-    categories = [(1, 'yields')]
-
-    cb = ch.CombineHarvester()
-
-    cb.AddObservations(['*'], [''], ['13TeV'], [''], categories)
-
-    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], backgrounds, categories, False)
-
-    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], signals, categories, True)
-
-    # Systematics
-    if not options.stat_only:
-        cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.027))
-
-        #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
-        #        (['ttbar'], 1.10)
-        #        (['dy'], 1.30)
-        #        (['SingleTop'], 1.20)
-        #        )
-
-        #cb.cp().AddSyst(cb, '$PROCESS_xsec', 'lnN', ch.SystMap('process')
-        #        (['ttbar'], 1.055842)
-        #        )
-
-    #for systematic in systematics:
-    #    cb.cp().AddSyst(cb, systematic, 'shape', ch.SystMap()(1.00))
-
-    # Import shapes from ROOT file
-    cb.cp().backgrounds().ExtractShapes(file, '$PROCESS_yields', '$PROCESS_yields__$SYSTEMATIC')
-    cb.cp().signals().ExtractShapes(file, '$PROCESS_yields', '$PROCESS_yields__$SYSTEMATIC')
-
-    # Bin by bin uncertainties
-    if not options.stat_only:
-        print "Making bin by bin uncertainty"
-        bbb = ch.BinByBinFactory()
-        bbb.SetAddThreshold(0.05).SetMergeThreshold(0.5).SetFixNorm(False)
-        bbb.MergeBinErrors(cb.cp().backgrounds())
-        bbb.AddBinByBin(cb.cp().backgrounds(), cb)
-
-    for signal in signals :
-
-        output_prefix = 'MIS_Signal_%s_Discriminant_%s' % (signal, discriminantName)
-
-        output_dir = os.path.join(options.output, '%s' % (signal))
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        fake_mass = '125'
-
-        # Write card
-        datacard = os.path.join(output_dir, output_prefix + '.dat')
-        cb.cp().mass([fake_mass, "*"]).WriteDatacard(os.path.join(output_dir, output_prefix + '.dat'), os.path.join(output_dir, output_prefix + '_shapes.root'))
-
-        # Write small script to compute the limit
-        workspace_file = os.path.basename(os.path.join(output_dir, output_prefix + '_combine_workspace.root'))
-        script = """#! /bin/bash
-
-# If workspace does not exist, create it once
-if [ ! -f {workspace_root} ]; then
-    text2workspace.py {datacard} -m {fake_mass} -o {workspace_root}
-fi
-
-# Run limit
-
-combine -H ProfileLikelihood -M Asymptotic -n {name} {workspace_root} -S {systematics}
-""".format(workspace_root=workspace_file, datacard=os.path.basename(datacard), name=output_prefix, fake_mass=fake_mass, systematics=(0 if options.stat_only else 1))
-        script_file = os.path.join(output_dir, output_prefix + '_run_limits.sh')
-        with open(script_file, 'w') as f:
-            f.write(script)
-        
-        st = os.stat(script_file)
-        os.chmod(script_file, st.st_mode | stat.S_IEXEC)
+#def prepareShapesFromBoxes(backgrounds, signals, discriminantName):
+#    # Backgrounds is a list of string of the considered backgrounds corresponding to entries in processes_histfactory_mapping
+#
+#    import CombineHarvester.CombineTools.ch as ch
+#
+#    if options.file == '' : 
+#        print "Must specify input file for box mode"
+#        sys.exit()
+#    file = options.file 
+#
+#    categories = [(1, 'yields')]
+#
+#    cb = ch.CombineHarvester()
+#
+#    cb.AddObservations(['*'], [''], ['13TeV'], [''], categories)
+#
+#    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], backgrounds, categories, False)
+#
+#    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], signals, categories, True)
+#
+#    # Systematics
+#    #if not options.nosys:
+#    #    cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.027))
+#
+#        #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
+#        #        (['ttbar'], 1.10)
+#        #        (['dy'], 1.30)
+#        #        (['SingleTop'], 1.20)
+#        #        )
+#
+#        #cb.cp().AddSyst(cb, '$PROCESS_xsec', 'lnN', ch.SystMap('process')
+#        #        (['ttbar'], 1.055842)
+#        #        )
+#
+#    #for systematic in systematics:
+#    #    cb.cp().AddSyst(cb, systematic, 'shape', ch.SystMap()(1.00))
+#
+#    # Import shapes from ROOT file
+#    cb.cp().backgrounds().ExtractShapes(file, '$PROCESS_yields', '$PROCESS_yields__$SYSTEMATIC')
+#    cb.cp().signals().ExtractShapes(file, '$PROCESS_yields', '$PROCESS_yields__$SYSTEMATIC')
+#
+#    # Bin by bin uncertainties
+#    if options.bbb:
+#        print "Making bin by bin uncertainty"
+#        bbb = ch.BinByBinFactory()
+#        bbb.SetAddThreshold(0.05).SetMergeThreshold(0.5).SetFixNorm(False)
+#        bbb.MergeBinErrors(cb.cp().backgrounds())
+#        bbb.AddBinByBin(cb.cp().backgrounds(), cb)
+#
+#    for signal in signals :
+#
+#        output_prefix = 'MIS_Signal_%s_Discriminant_%s' % (signal, discriminantName)
+#
+#        output_dir = os.path.join(options.output, '%s' % (signal))
+#        if not os.path.exists(output_dir):
+#            os.makedirs(output_dir)
+#
+#        fake_mass = '125'
+#
+#        # Write card
+#        datacard = os.path.join(output_dir, output_prefix + '.dat')
+#        cb.cp().mass([fake_mass, "*"]).WriteDatacard(os.path.join(output_dir, output_prefix + '.dat'), os.path.join(output_dir, output_prefix + '_shapes.root'))
+#
+#        # Write small script to compute the limit
+#        workspace_file = os.path.basename(os.path.join(output_dir, output_prefix + '_combine_workspace.root'))
+#        script = """#! /bin/bash
+#
+## If workspace does not exist, create it once
+#if [ ! -f {workspace_root} ]; then
+#    text2workspace.py {datacard} -m {fake_mass} -o {workspace_root}
+#fi
+#
+## Run limit
+#
+#combine -H ProfileLikelihood -M Asymptotic -n {name} {workspace_root} -S {systematics}
+#""".format(workspace_root=workspace_file, datacard=os.path.basename(datacard), name=output_prefix, fake_mass=fake_mass, systematics=(0 if options.nosys else 1))
+#        script_file = os.path.join(output_dir, output_prefix + '_run_limits.sh')
+#        with open(script_file, 'w') as f:
+#            f.write(script)
+#        
+#        st = os.stat(script_file)
+#        os.chmod(script_file, st.st_mode | stat.S_IEXEC)
 
 def prepareShapes(backgrounds, signals, discriminant, discriminantName):
     # Backgrounds is a list of string of the considered backgrounds corresponding to entries in processes_histfactory_mapping
@@ -404,23 +442,30 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
 
     categories = discriminant
 
+    def get_hist_regex(r):
+        return '^%s(__.*(up|down))?$' % r
+
     categories_histfactory_mapping = {
             #'BDTsummed_noZh': 'MVA_summed_weight1_withoutZh_kBDT_All_no_cut',
             #'BDTmultiplied_noZh': 'MVA_multiplied_weight1_withoutZh_kBDT_All_no_cut',
-            'TT_weights': 'pp_tt_llbb_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'DY_weights': 'pp_Z_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'ZH_weights': 'pp_zh_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'tWp_weights': 'twplus_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'tWm_weights': 'twminus_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'ZZ_weights': 'pp_zz_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'ATan_DY_TT': 'arcTan_pp_Z_llbb_simple_tfJetAllEta_minus_pp_tt_llbb_tfJetAllEta_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'ATan_twp_twm': 'arcTan_twplus_tfJetAllEta_minus_twminus_tfJetAllEta_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'csvProd': 'jj_CSVprod_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'yields': '^yields$',
-            'mll': 'll_M_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'mll_ee': 'll_M_ElEl_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'mll_emu': 'll_M_MuEl_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
-            'mll_mumu': 'll_M_MuMu_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'TT_weights': 'pp_tt_llbb_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'DY_weights': 'pp_Z_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'ZH_weights': 'pp_zh_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'tWp_weights': 'twplus_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'tWm_weights': 'twminus_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'ZZ_weights': 'pp_zz_llbb_simple_tfJetAllEta_minLog_weight_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'ATan_DY_TT': 'arcTan_pp_Z_llbb_simple_tfJetAllEta_minus_pp_tt_llbb_tfJetAllEta_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'ATan_twp_twm': 'arcTan_twplus_tfJetAllEta_minus_twminus_tfJetAllEta_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'csvProd': 'jj_CSVprod_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'yields': '^yields(?!(_sf|_df))',
+            'yields': get_hist_regex('yields(?!(_sf|_df))'),
+            'yields_sf': get_hist_regex('yields_sf'),
+            'yields_df': get_hist_regex('yields_df'),
+            #'yields': '^yields$',
+            #'mll': 'll_M_All_hh_llmetjj_HWWleptons_btagM_csv_no_cut',
+            #'mll_ee': 'll_M_ElEl_hh_llmetjj_HWWleptons_btagT_csv_no_cut',
+            #'mll_emu': 'll_M_MuEl_hh_llmetjj_HWWleptons_btagT_csv_no_cut',
+            #'mll_mumu': 'll_M_MuMu_hh_llmetjj_HWWleptons_btagT_csv_no_cut',
             }
     #if not options.mode == 'box' :
     processes_histfactory_mapping = {
@@ -449,8 +494,8 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
             'TTDM_1_100_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
             'TTDM_1_500_ps': ['TTbarDMJets_pseudoscalar_Mchi-1_Mphi-500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_Fall15MiniAODv2'],
             
-            'H_200_ZA_50': ['HToZATo2L2B_MH-200_MA-50_13TeV-madgraph_Fall15MiniAODv2'],
-            'H_3000_ZA_2000': ['HToZATo2L2B_MH-3000_MA-2000_13TeV-madgraph_Fall15MiniAODv2'],
+            #'H_200_ZA_50': ['HToZATo2L2B_MH-200_MA-50_13TeV-madgraph_Fall15MiniAODv2'],
+            #'H_3000_ZA_2000': ['HToZATo2L2B_MH-3000_MA-2000_13TeV-madgraph_Fall15MiniAODv2'],
             'H_500_ZA_300': ['HToZATo2L2B_MH-500_MA-300_13TeV-madgraph_Fall15MiniAODv2'],
             'H_800_ZA_700': ['HToZATo2L2B_MH-800_MA-700_13TeV-madgraph_Fall15MiniAODv2'],
             
@@ -463,7 +508,7 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
             #'SMHiggs': ['.*_M125_.*'],
             }
     if not options.fake_data:
-        processes_histfactory_mapping['data_obs'] = ['.Run2015D-16Dec2015.']
+        processes_histfactory_mapping['data_obs'] = ['.+Run2015D-16Dec2015.+']
         print "Carefull we use  regex .Run2015D-16Dec2015."
     #else : 
     #    processes_histfactory_mapping = {
@@ -479,78 +524,108 @@ def prepareShapes(backgrounds, signals, discriminant, discriminantName):
     #        processes_histfactory_mapping['data_obs'] = ['data_obs_histos.root']
 
     file, systematics = prepareFile(processes_histfactory_mapping, categories_histfactory_mapping, root_path, discriminantName)
- 
-    cb = ch.CombineHarvester()
-
-    cb.AddObservations(['*'], [''], ['13TeV'], [''], categories)
-
-    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], backgrounds, categories, False)
-
-    cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], signals, categories, True)
-
-    # Systematics
-    if not options.stat_only:
-        cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.027))
-
-        #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
-        #        (['TT'], 1.50)
-        #        (['DY'], 1.50)
-        # #        (['SingleTop'], 1.20)
-        #        )
-
-        #cb.cp().AddSyst(cb, '$PROCESS_xsec', 'lnN', ch.SystMap('process')
-        #        (['ttbar'], 1.055842)
-        #        )
-
-    if options.SF :
-        if not options.box : 
-            cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
-                    (['TT'], 1.)
-                    (['DY'], 1.)
-                    #(['DYbb'], 1.)
-                    #(['DYbx'], 1.)
-                    #(['DYxx'], 1.)
-                    #(['ZZ'], 1.)
-                    #(['ZH'], 1.)
-                    #(['tWp'], 1.)
-                    #(['tWm'], 1.)
-                    )
-        else:
-            #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
-            #        (['TT'], 1.5)
-            #        (['DY'], 1.5)
-            #        (['ZZ'], 1.5)
-            #        (['ZH'], 1.5)
-            #        (['tWp'], 1.5)
-            #        (['tWm'], 1.5)
-            #        )
-            cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
-                    (['TT'], 1.)
-                    (['DY'], 1.)
-                    #(['DYbb'], 1.)
-                    #(['DYbx'], 1.)
-                    #(['DYxx'], 1.)
-                    (['ZZ'], 1.)
-                    (['ZH'], 1.)
-                    (['tWp'], 1.)
-                    (['tWm'], 1.)
-                    )
-
-    for systematic in systematics:
-        cb.cp().AddSyst(cb, systematic, 'shape', ch.SystMap()(1.00))
-
-    # Import shapes from ROOT file
-    cb.cp().backgrounds().ExtractShapes(file, '$BIN/$PROCESS', '$BIN/$PROCESS__$SYSTEMATIC')
-    cb.cp().signals().ExtractShapes(file, '$BIN/$PROCESS', '$BIN/$PROCESS__$SYSTEMATIC')
-
-    # Bin by bin uncertainties
-    if not options.stat_only:
-        bbb = ch.BinByBinFactory()
-        bbb.SetAddThreshold(0.05).SetMergeThreshold(0.5).SetFixNorm(False)
-        bbb.MergeBinErrors(cb.cp().backgrounds())
-        bbb.AddBinByBin(cb.cp().backgrounds(), cb)
-
+    
     for signal in signals :
+ 
+        cb = ch.CombineHarvester()
+
+        cb.AddObservations(['*'], [''], ['13TeV'], [''], categories)
+
+        cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], backgrounds, categories, False)
+
+        cb.AddProcesses(['*'], [''], ['13TeV_2015'], [''], [signal], categories, True)
+
+
+        # Systematics
+        if not options.nosys:
+            for systematic in systematics:
+                cb.cp().AddSyst(cb, systematic, 'shape', ch.SystMap()(1.00))
+            cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.027))
+
+            if options.flavSplit :
+                print "Bla"
+                cb.cp().bin(['yields_df']).AddSyst(cb, '$PROCESS_normalization_df', 'lnN', ch.SystMap('process')
+                        (['TT'], 1.001)
+                        #(['SingleTop'], 1.)
+                        )
+                cb.cp().bin(['yields_sf']).AddSyst(cb, '$PROCESS_normalization_sf', 'lnN', ch.SystMap('process')
+                        (['TT'], 1.02)
+                        (['DY'], 1.04)
+                        #(['SingleTop'], 1.)
+                        )
+
+            else :
+                cb.cp().AddSyst(cb, '$PROCESS_normalization', 'lnN', ch.SystMap('process')
+                        (['TT'], 1.02)
+                        (['DY'], 1.04)
+                        #(['SingleTop'], 1.)
+                        )
+
+            #cb.cp().AddSyst(cb, '$PROCESS_xsec', 'lnN', ch.SystMap('process')
+            #        (['ttbar'], 1.055842)
+            #        )
+        if options.nosys and not options.bbb : 
+            cb.cp().AddSyst(cb, 'lumi_$ERA', 'lnN', ch.SystMap('era')(['13TeV_2015'], 1.00001)) # Add a negligible systematic (chosen to be lumi) to trick combine
+
+        if options.SF :
+            if not options.box : 
+                cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
+                        (['TT'], 1.)
+                        (['DY'], 1.)
+                        #(['DYbb'], 1.)
+                        #(['DYbx'], 1.)
+                        #(['DYxx'], 1.)
+                        #(['ZZ'], 1.)
+                        #(['ZH'], 1.)
+                        #(['tWp'], 1.)
+                        #(['tWm'], 1.)
+                        )
+            else:
+                #cb.cp().AddSyst(cb, '$PROCESS_modeling', 'lnN', ch.SystMap('process')
+                #        (['TT'], 1.05)
+                #        (['DY'], 1.1)
+                #        (['ZZ'], 2.0)
+                #        (['ZH'], 20.0)
+                #        (['tWp'], 2.0)
+                #        (['tWm'], 2.0)
+                #        )
+                cb.cp().AddSyst(cb, 'SF_$PROCESS', 'rateParam', ch.SystMap('process')
+                        (['TT'], 1.)
+                        (['DY'], 1.)
+                        #(['DYbb'], 1.)
+                        #(['DYbx'], 1.)
+                        #(['DYxx'], 1.)
+                        (['ZZ'], 1.)
+                        (['ZH'], 1.)
+                        (['tWp'], 1.)
+                        (['tWm'], 1.)
+                        )
+
+        # Import shapes from ROOT file
+        cb.cp().backgrounds().ExtractShapes(file, '$BIN/$PROCESS', '$BIN/$PROCESS__$SYSTEMATIC')
+        cb.cp().signals().ExtractShapes(file, '$BIN/$PROCESS', '$BIN/$PROCESS__$SYSTEMATIC')
+
+        # Bin by bin uncertainties
+        if options.bbb:
+            #bbb = ch.BinByBinFactory()
+            #bbb.SetAddThreshold(0.05).SetMergeThreshold(0.5).SetFixNorm(False)
+            #bbb.MergeBinErrors(cb.cp().backgrounds())
+            #bbb.AddBinByBin(cb.cp().backgrounds(), cb)
+            bbb = ch.BinByBinFactory()
+            if options.SF :
+                bbb.SetAddThreshold(0.1).SetMergeThreshold(options.mt).SetFixNorm(False)
+                bbb.MergeBinErrors(cb.cp().backgrounds())
+            else :
+                bbb.SetAddThreshold(0.05).SetMergeThreshold(0.5).SetFixNorm(False)
+                #bbb.SetAddThreshold(0.1).SetMergeThreshold(1)
+                bbb.MergeBinErrors(cb.cp().backgrounds())
+                #bbb_sig = ch.BinByBinFactory()
+                #bbb_sig.SetAddThreshold(0.05).SetMergeThreshold(0.5).SetFixNorm(False)
+                #bbb_sig.MergeBinErrors(cb.cp().signals())
+                #bbb_sig.AddBinByBin(cb.cp().signals(), cb)
+                
+            bbb.AddBinByBin(cb.cp().backgrounds(), cb)
+
 
         output_prefix = 'MIS_Signal_%s_Discriminant_%s' % (signal, discriminantName)
 
@@ -575,8 +650,11 @@ fi
 
 # Run limit
 
-combine -H ProfileLikelihood -M Asymptotic -n {name} {workspace_root} -S {systematics}
-""".format(workspace_root=workspace_file, datacard=os.path.basename(datacard), name=output_prefix, fake_mass=fake_mass, systematics=(0 if options.stat_only else 1))
+combine -H ProfileLikelihood -M Asymptotic -n {name} {workspace_root} -S {systematics} --rMax 30000
+#combine -H ProfileLikelihood -M HybridNew -n {name} {workspace_root} -S {systematics} --testStat LHC --expectedFromGrid 0.5 
+#combine -H ProfileLikelihood -M HybridNew -n {name} {workspace_root} -S {systematics} --testStat LHC --expectedFromGrid 0.84 
+#combine -H ProfileLikelihood -M HybridNew -n {name} {workspace_root} -S {systematics} --testStat LHC --expectedFromGrid 0.16 
+""".format(workspace_root=workspace_file, datacard=os.path.basename(datacard), name=output_prefix, fake_mass=fake_mass, systematics=(0 if options.nosys else 1))
         script_file = os.path.join(output_dir, output_prefix + '_run_limits.sh')
         with open(script_file, 'w') as f:
             f.write(script)
